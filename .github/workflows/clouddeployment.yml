@@ -1,0 +1,112 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [15.x]
+     
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    
+    - name: Publish
+      run: dotnet publish --no-self-contained --runtime linux-x64 --configuration Release --output ./artifact/publish ./PostCodeProject/PostalCodeProject/PostCodeProject.csproj
+      
+    - name: Install zip
+      uses: montudor/action-zip@v1
+
+    - name: Zip output
+      run: zip -qq -r ../lambdaapi.zip .
+      working-directory: artifact/publish
+    
+    - name: Copy Cloudformation Template
+      run: cp ../Coding/cloudformation.yaml ./artifact/cloudformation.yaml
+      
+    - uses: actions/upload-artifact@v3
+      with:
+        name: lambda
+        path: ./artifact
+      
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+
+    - name: Upload to S3
+      run: aws s3 cp ./artifact/lambdaapi.zip s3://dtlambdas3bucket
+               
+      
+  lambda-deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      
+      steps: 
+      - uses: actions/download-artifact@v3
+        with:
+          name: lambda
+          path: artifact
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+      
+      - name: Deploy to AWS CloudFormation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: dtawslambdareacttemplate
+          template: artifact/cloudformation.yaml
+          parameter-overrides: "LambdaFuncName=dtlambda,LambdaCodeS3Bucket=dtlambdas3bucket,LambdaCodeS3Key=lambdaapi.zip,ReactAppS3Bucket=dtreactwebapibucket"
+          no-fail-on-empty-changeset: "1"
+      
+      
+          
+  react-build_deploy:
+      runs-on: ubuntu-latest
+      needs: lambda-deploy
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+          
+        - name: Setup node
+          uses: actions/setup-node@v3
+          
+        - name: Install dependencies
+          run: npm --prefix ../Coding/React install
+          
+        - name: Build static files
+          run: npm --prefix ../Coding/React run build
+          
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ap-south-1 
+            
+        - name: Deploy static site to s3
+          run: aws s3 sync ./React/build s3://dtreactwebapibucket
+      
+      
+      
+      
