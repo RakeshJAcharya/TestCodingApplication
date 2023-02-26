@@ -36,7 +36,7 @@ jobs:
       working-directory: artifact/publish
     
     - name: Copy Cloudformation Template
-      run: cp ../Coding/cloudformation.yaml ./artifact/cloudformation.yaml
+      run: cp ./cloudformation.yaml ./artifact/cloudformation.yaml
       
     - uses: actions/upload-artifact@v3
       with:
@@ -92,10 +92,10 @@ jobs:
           uses: actions/setup-node@v3
           
         - name: Install dependencies
-          run: npm --prefix ../Coding/React install
+          run: npm --prefix ./ReactApp install
           
         - name: Build static files
-          run: npm --prefix ../Coding/React run build
+          run: npm --prefix ./ReactApp run build
           
         - name: Configure AWS credentials
           uses: aws-actions/configure-aws-credentials@v1
@@ -105,7 +105,7 @@ jobs:
             aws-region: ap-south-1 
             
         - name: Deploy static site to s3
-          run: aws s3 sync ./React/build s3://dtreactwebapibucket
+          run: aws s3 sync ./ReactApp/build s3://dtreactwebapibucket
       
       
       
