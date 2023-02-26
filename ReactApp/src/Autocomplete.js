@@ -16,8 +16,11 @@ const Autocomplete = () => {
             if (query.length > 0) {
             await axios.get(`${autocompleteUrl}?postcode=${query}`)
                 .then(response => {
-                    if(response.data[0] !== query){
+                    if(response.data[0] !== query && response.data.length > 0){
                     setResults(response.data);
+                    }
+                    else {
+                      setResults([]);
                     }
                 })
                 .catch(error => {
@@ -50,37 +53,36 @@ const Autocomplete = () => {
 
   return (
     <div className="container">
+      <div className='search-container'>
         <br /><br />
-        <h4>Autocomplete Search</h4> 
-        <div className='row col-md-6'>
-            <input type="text" className='form-control input col-md-5'
-            style={{marginLeft:10}}
-            value={query} onChange={handleChange}
-            onBlur={()=>{              
-                /* setTimeout(()=>{
-                    setResults([]);
-                },100); */
-            }} 
-            />
-            <button className='btn btn-primary col-md-3' style={{marginLeft: 5}} 
-            onClick={handleSearch}>Search</button>
-         </div>
-      <div className="dropdown col-md-10" style={{marginLeft: -8}}>
-      {
-       results.length>0 && results.map(result => (
-            <div onClick={()=>onSearch(result)}
-                className=' suggestion dropdown-row col-md-3' 
-                key={result}>
-                {result}
-            </div>
-        ))
-      }
+          <div className='row col-md-12'>
+              <input type="text" id="search-box" className='form-control input col-md-5'
+              style={{marginLeft:10}} 
+              value={query} onChange={handleChange}              
+              />
+              <ul id="suggestions" className='col-md-5' style={{marginLeft:12}} >
+                  {
+                  results.length>0 && results.map(result => (
+                        <li onClick={()=>onSearch(result)} data-testid="row"                       
+                            key={result}>
+                            {result}
+                        </li>
+                    ))
+                  }
+                </ul>
+              <button className='btn btn-primary col-md-3' style={{marginLeft: 5}} 
+              onClick={handleSearch}>Search</button>
+              
+          </div>
+          <div className="col-md-10">
+            
+          </div>
       </div>
-      <br /><br />
-      <h4>Table with Autocomplete Search</h4>  
-      <table className="table table-bordered">
+      <br />
+      <h4>PostCode Table</h4>        
+      <table className="table table-bordered " id="search-results">
                 <thead>
-                    <tr>
+                    <tr class="table-warning">
                     <th scope="col">Country</th>
                     <th scope="col">Region</th>
                     <th scope="col">Admin District</th>

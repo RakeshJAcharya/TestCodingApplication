@@ -8,3 +8,62 @@
 .suggestion:hover{
     background-color: grey;
 }
+.search-container {
+    position: relative;
+    float: right;
+    padding-bottom: 5px;
+  }
+  
+  #search-box {
+    width: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  #suggestions {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 35%;
+    background-color: #fff;
+    z-index: 1;
+  }
+  
+  #suggestions li {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  #suggestions li:hover {
+    background-color: #f2f2f2;
+  }
+  
+  #search-box:focus + #suggestions {
+    display: block;
+  }
+  
+  #search-results {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+  }
+  
+  #search-results th, #search-results td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+  
+  #search-results th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+  
