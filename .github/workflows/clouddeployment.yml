@@ -26,7 +26,7 @@ jobs:
         dotnet-version: 6.0.x
     
     - name: Publish
-      run: dotnet publish --no-self-contained --runtime linux-x64 --configuration Release --output ./artifact/publish ./PostCodeProject/PostalCodeProject/PostCodeProject.csproj
+      run: dotnet publish --no-self-contained --runtime linux-x64 --configuration Release --output ./artifact/publish ./LambdaWebApi/PostalCodeProject/PostCodeProject.csproj
       
     - name: Install zip
       uses: montudor/action-zip@v1
