@@ -65,16 +65,23 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: dtlambdagatewayapi
+    DependsOn:
+      - lambdaFunction
 
   ApiGatewayResource:
-    Type: AWS::ApiGateway::Resource
+    Type: AWS::ApiGateway::Resource    
     Properties:
       RestApiId: !Ref ApiGatewayRestApi
-      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-      PathPart: "{/}"
+      ParentId: !GetAtt
+        - ApiGatewayRestApi
+        - RootResourceId
+      PathPart:
+        Ref: lambdaFunction
+    DependsOn:
+      - ApiGatewayRestApi
 
   ApiGatewayMethod:
-    Type: AWS::ApiGateway::Method
+    Type: AWS::ApiGateway::Method    
     Properties:
       RestApiId: !Ref ApiGatewayRestApi
       ResourceId: !Ref ApiGatewayResource
@@ -82,16 +89,20 @@ Resources:
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaFunction.Arn}/invocations"
-
+        IntegrationResponses:
+          - StatusCode: 200
+        IntegrationHttpMethod: GET
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaFunction.Arn}/invocations" - LambdaFuncNameArn: !GetAtt lambdaFunction.Arn
+    DependsOn:
+      - ApiGatewayResource
+      
   ApiGatewayDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn: ApiGatewayMethod
+    Type: AWS::ApiGateway::Deployment    
     Properties:
       RestApiId: !Ref ApiGatewayRestApi
       StageName: prod
-
+    DependsOn: ApiGatewayMethod
+    
   MyLambdaPermission:
     Type: "AWS::Lambda::Permission"
     Properties:
@@ -99,7 +110,8 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*"
-      
+    DependsOn:
+      - ApiGatewayDeployment  
   # Create an S3 Bucket that serves a static website (i.e. React app)
   mybucket:
     Type: AWS::S3::Bucket
