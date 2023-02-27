@@ -92,7 +92,9 @@ Resources:
         IntegrationResponses:
           - StatusCode: 200
         IntegrationHttpMethod: GET
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaFunction.Arn}/invocations" 
+        Uri: !Sub
+          - >-
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaFunction.Arn}/invocations
           - LambdaFuncNameArn: !GetAtt lambdaFunction.Arn
     DependsOn:
       - ApiGatewayResource
